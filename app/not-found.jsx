@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaHome, FaSearch, FaShoppingBasket, FaShoppingCart, FaQuestionCircle, FaPhoneAlt } from "react-icons/fa";
+import { FaHome, FaShoppingBasket, FaShoppingCart, FaQuestionCircle, FaPhoneAlt } from "react-icons/fa";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -26,31 +26,9 @@ export default function NotFound() {
       <ErrorScene
         variant="notfound"
         title="این صفحه گم شده!"
-        description="انگار این آدرس وجود نداره یا جابه‌جا و حذف شده. نگران نباشید، می‌تونید از همین‌جا دنبال چیزی که می‌خواید بگردید یا به صفحه‌ی اصلی برگردید."
+        description="انگار این آدرس وجود نداره یا جابه‌جا و حذف شده. نگران نباشید، می‌تونید به صفحه‌ی اصلی برگردید یا از لینک‌های زیر ادامه بدید."
       >
-        {/* جستجوی ساده (بدون جاوااسکریپت) → /products?q=... */}
-        <form
-          action="/products"
-          method="get"
-          role="search"
-          className="mx-auto mt-6 flex max-w-sm items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-soft transition focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-600/15"
-        >
-          <FaSearch aria-hidden="true" className="mx-3 shrink-0 text-slate-400" size={14} />
-          <input
-            name="q"
-            type="search"
-            enterKeyHint="search"
-            autoComplete="off"
-            aria-label="جستجوی محصول"
-            placeholder="دنبال چی می‌گردید؟"
-            className="min-w-0 flex-1 bg-transparent py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
-          />
-          <button type="submit" className={cn(buttonVariants({ size: "sm" }), "px-5")}>
-            جستجو
-          </button>
-        </form>
-
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link href="/" className={cn(buttonVariants({ size: "default" }), "flex")}>
             <FaHome size={14} />
             بازگشت به صفحه‌ی اصلی

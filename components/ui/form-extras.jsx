@@ -26,18 +26,21 @@ export function IconInput({ icon: Icon, trailing, error = false, className, ...p
 export function FormSection({ icon: Icon, title, hint, children, className }) {
   return (
     <section className={cn("space-y-4", className)}>
-      <div className="flex items-center gap-2.5">
-        {Icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
-            <Icon size={14} />
-          </span>
-        )}
-        <div className="min-w-0">
-          <h2 className="text-[13px] font-extrabold leading-5 text-slate-800">{title}</h2>
-          {hint && <p className="text-[11px] leading-4 text-slate-500">{hint}</p>}
+      {/* بدون title → فقط فیلدها (وقتی صفحه/مرحله از قبل همون تیتر رو داره، تیتر دوم تکراریه) */}
+      {title && (
+        <div className="flex items-center gap-2.5">
+          {Icon && (
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
+              <Icon size={14} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <h2 className="text-[13px] font-extrabold leading-5 text-slate-800">{title}</h2>
+            {hint && <p className="text-[11px] leading-4 text-slate-500">{hint}</p>}
+          </div>
+          <span aria-hidden="true" className="h-px flex-1 bg-slate-200/80" />
         </div>
-        <span aria-hidden="true" className="h-px flex-1 bg-slate-200/80" />
-      </div>
+      )}
       {children}
     </section>
   );

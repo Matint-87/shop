@@ -46,6 +46,7 @@ export default function ProfilePageClient({ user: initialUser, initialSection = 
   const [user, setLocalUser] = useState(initialUser);
   const [section, setSection] = useState(initialSection);
   const [editingInfo, setEditingInfo] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   function handleSaved(updated) {
@@ -57,6 +58,7 @@ export default function ProfilePageClient({ user: initialUser, initialSection = 
   function handleSelectSection(key) {
     setSection(key);
     setEditingInfo(false);
+    setEditingAddress(false);
   }
 
   async function handleLogout() {
@@ -136,13 +138,15 @@ export default function ProfilePageClient({ user: initialUser, initialSection = 
           </>
         ) : section === "addresses" ? (
           <>
-            <h2 className="mb-4 hidden items-center gap-2 text-sm font-extrabold text-slate-800 md:flex">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-700">
-                <SectionIcon size={14} />
-              </span>
-              {meta.title}
-            </h2>
-            <AddressList />
+            {!editingAddress && (
+              <h2 className="mb-4 hidden items-center gap-2 text-sm font-extrabold text-slate-800 md:flex">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-700">
+                  <SectionIcon size={14} />
+                </span>
+                {meta.title}
+              </h2>
+            )}
+            <AddressList onEditingChange={setEditingAddress} />
           </>
         ) : section === "security" ? (
           <>

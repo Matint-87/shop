@@ -59,7 +59,8 @@ export default function ProfileForm({ user, submitLabel = "ذخیره و ادا�
 
   return (
     <form onSubmit={submit} noValidate className="space-y-7">
-      <FormSection icon={FaUser} title="مشخصات شما" hint="برای ثبت سفارش و صدور فاکتور">
+      {/* تیتر نداره: بالاش همیشه «اطلاعات حساب کاربری» یا «اطلاعات شخصی» هست */}
+      <FormSection>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="نام" htmlFor="firstName" error={errors.firstName} required>
             <IconInput

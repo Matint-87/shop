@@ -59,12 +59,16 @@ function AddressCard({ address, onEdit, onDelete, busy }) {
   );
 }
 
-export default function AddressList() {
+export default function AddressList({ onEditingChange }) {
   const confirm = useConfirm();
   const [addresses, setAddresses] = useState(null); // null = در حال بارگذاری
   const [error, setError] = useState("");
   useToastOnChange(error); // پیام خطا به‌صورت toast نشون داده می‌شه
   const [editing, setEditing] = useState(null); // null | "new" | address
+  // والد (ProfilePageClient) تیتر «آدرس‌های من» رو وقتی فرم بازه پنهان می‌کنه تا دو تیتر زیر هم نیفتن
+  useEffect(() => {
+    onEditingChange?.(Boolean(editing));
+  }, [editing, onEditingChange]);
   const [busyId, setBusyId] = useState(null);
 
   function load() {

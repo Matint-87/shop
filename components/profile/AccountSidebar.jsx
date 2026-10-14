@@ -28,7 +28,7 @@ export default function AccountSidebar({ user, active, onSelect, onLogout, loggi
   const isAdmin = user.role === "ADMIN";
 
   return (
-    <aside className="hidden shrink-0 overflow-y-auto rounded-3xl border border-slate-200/70 bg-white shadow-soft md:sticky md:top-24 md:block md:max-h-[calc(100dvh-7rem)] md:w-72 md:self-start">
+    <aside className="hidden shrink-0 rounded-3xl border border-slate-200/70 bg-white shadow-soft md:sticky md:top-24 md:block md:w-72 md:self-start">
       {/* سربرگ: بنر گرادیانی + آواتار روی لبه‌ی بنر */}
       <div className="relative">
         <div
