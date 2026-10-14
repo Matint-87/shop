@@ -83,7 +83,7 @@ export default async function ProductPage({ params }) {
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       <JsonLd data={productLd(p)} />
       <JsonLd data={breadcrumbLd(crumbs)} />

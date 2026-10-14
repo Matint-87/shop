@@ -26,6 +26,9 @@
   --color-slate-200: #dcd7c8;
   --color-slate-300: #c7c1af;
 
+  /* فونت پیش‌فرض سایت (کلاس font-sans) */
+  --font-sans: Vazirmatn, Tahoma, "Segoe UI", sans-serif;
+
   /* سایه‌های نرم برای کارت‌ها */
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 20px -6px rgb(15 23 42 / 0.08);
   --shadow-pop: 0 2px 6px rgb(15 23 42 / 0.06), 0 16px 40px -12px rgb(15 23 42 / 0.18);
@@ -43,38 +46,69 @@
       transform: translateY(0);
     }
   }
+
+  /* انیمیشن‌های صفحه‌های خطا (۴۰۴ و ...)؛ فقط با motion-safe: استفاده می‌شن */
+  --animate-float: float 7s ease-in-out infinite;
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-16px) rotate(5deg); }
+  }
+  --animate-blob: blob 16s ease-in-out infinite;
+  @keyframes blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(24px, -18px) scale(1.08); }
+    66% { transform: translate(-18px, 20px) scale(0.94); }
+  }
+  --animate-bob: bob 3.2s ease-in-out infinite;
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  --animate-shadow-pulse: shadow-pulse 3.2s ease-in-out infinite;
+  @keyframes shadow-pulse {
+    0%, 100% { transform: scaleX(1); opacity: 0.35; }
+    50% { transform: scaleX(0.62); opacity: 0.15; }
+  }
+  --animate-ring-out: ring-out 2.6s ease-out infinite;
+  @keyframes ring-out {
+    0% { transform: scale(0.85); opacity: 0.55; }
+    100% { transform: scale(1.9); opacity: 0; }
+  }
+  --animate-wobble: wobble 3s ease-in-out infinite;
+  @keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-9deg); }
+    40% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    80% { transform: rotate(3deg); }
+  }
+  --animate-pop-in: pop-in 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.5) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  --animate-shine: shine 4.5s ease-in-out infinite;
+  @keyframes shine {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 }
 
 /*
-  فونت شبنم — هر وزن @font-face جدا دارد.
-  (قبلاً چند src پشت‌سرهم توی یک @font-face بود و فقط آخری اعمال می‌شد؛ یعنی همه‌ی وزن‌ها Medium بودند.)
+  فونت وزیرمتن (نسخه‌ی ارقام فارسی - Medium) برای کل سایت.
+  فقط وزن Medium داریم؛ وزن‌های سنگین‌تر (font-bold / font-extrabold) رو مرورگر از همین فایل «بولد مصنوعی» می‌سازه.
+  برای بولد واقعی، فایل Vazirmatn-FD-Bold.woff2 رو کنارش بذارید و یک @font-face با font-weight: 700 900 اضافه کنید.
 */
 @font-face {
-  font-family: Number;
-  font-weight: 400;
-  font-display: swap;
-  src: url(/font/Shabnam-FD-UqE7V9cL.woff2) format("woff2");
-}
-@font-face {
-  font-family: Number;
+  font-family: Vazirmatn;
+  font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(/font/Shabnam-Medium-FD-CCYWnpK7.woff2) format("woff2");
-}
-@font-face {
-  font-family: Number;
-  font-weight: 700 900;
-  font-display: swap;
-  src: url(/font/Shabnam-Bold-FD-B4xNpIWI.woff2) format("woff2");
-}
-@font-face {
-  font-family: fontello;
-  font-display: swap;
-  src: url(/font/fontello-Cqw191qV.woff2) format("woff2");
+  src: url(/font/Vazirmatn-FD-Medium.woff2) format("woff2");
 }
 
 :root {
-  --fontFamily: Number;
+  --fontFamily: Vazirmatn;
   /* سطح کارت‌ها/ورودی‌ها (همون bg-white)؛ توی تم تاریک عوض می‌شه */
   --surface: #ffffff;
 }
@@ -508,7 +542,7 @@ html[data-palette="earth"] .Toastify__toast.sabah-toast { border-color: #ead9c8;
 }
 
 html {
-  font-family: Number, Tahoma, "Segoe UI", sans-serif;
+  font-family: Vazirmatn, Tahoma, "Segoe UI", sans-serif;
   -webkit-text-size-adjust: 100%;
 }
 

@@ -23,7 +23,7 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       {/* اگه ادمین بنر فعالی گذاشته باشه اسلایدر بنرها، وگرنه هیروی پیش‌فرض */}
       {/* وقتی بنر نمایش داده می‌شه (و Hero با h1 اش نیست)، صفحه همچنان یک h1 داره */}

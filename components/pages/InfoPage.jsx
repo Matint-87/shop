@@ -6,7 +6,7 @@ import BottomNav from "@/components/BottomNav";
 /** قالب مشترک صفحه‌های متنی (درباره‌ی ما، قوانین، سوالات متداول و…). کامپوننت سروریه. */
 export default function InfoPage({ title, intro, children }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:py-10">
         <nav aria-label="مسیر صفحه" className="mb-4 flex items-center gap-1.5 text-xs text-slate-500">

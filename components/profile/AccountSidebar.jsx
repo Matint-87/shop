@@ -5,6 +5,7 @@ import {
   FaChevronLeft,
   FaMapMarkerAlt,
   FaPalette,
+  FaShieldAlt,
   FaShoppingBag,
   FaSignOutAlt,
   FaStoreAlt,
@@ -19,6 +20,7 @@ export const NAV_ITEMS = [
   { key: "orders", label: "سفارش‌ها", icon: FaShoppingBag },
   { key: "wallet", label: "کیف پول", icon: FaWallet },
   { key: "addresses", label: "آدرس‌ها", icon: FaMapMarkerAlt },
+  { key: "security", label: "امنیت و دستگاه‌ها", icon: FaShieldAlt },
   { key: "appearance", label: "ظاهر سایت", icon: FaPalette },
 ];
 

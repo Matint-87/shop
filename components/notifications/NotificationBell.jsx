@@ -168,7 +168,7 @@ export default function NotificationBell({ placement = "header", tone = "light" 
               aria-modal="true"
               aria-label="اعلان‌ها"
               dir="rtl"
-              className={`fixed inset-0 z-[200] flex h-dvh flex-col overflow-hidden bg-white font-[Number] md:inset-auto md:h-auto md:max-h-[75dvh] md:w-96 md:rounded-2xl md:border md:border-slate-200 md:shadow-pop ${pos}`}
+              className={`fixed inset-0 z-[200] flex h-dvh flex-col overflow-hidden bg-white font-sans md:inset-auto md:h-auto md:max-h-[75dvh] md:w-96 md:rounded-2xl md:border md:border-slate-200 md:shadow-pop ${pos}`}
             >
               {/* سربرگ: دکمه‌ی بازگشت (فقط موبایل) + عنوان + صدا + انتخاب + حذف همه + خواندن همه */}
               {selecting ? (

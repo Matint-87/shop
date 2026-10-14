@@ -41,7 +41,7 @@ export default async function ProductsPage({ searchParams }) {
   const isDefault = !one(sp.q) && !category && one(sp.discounted) !== "1";
   const initialProducts = isDefault ? await getProductsForShelf({ limit: 20 }) : null;
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       {/* ProductsPageClient از useSearchParams (پارامتر q) استفاده می‌کنه، پس Suspense لازمه */}
       <Suspense fallback={<div className="mx-auto max-w-7xl px-4 py-6" />}>

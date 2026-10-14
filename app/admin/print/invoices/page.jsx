@@ -41,7 +41,7 @@ export default async function AdminPrintInvoicesPage({ searchParams }) {
   const money = await moneyByOrder(prisma, rows.map((r) => r.id));
 
   return (
-    <div className="min-h-screen bg-slate-100 px-3 py-6 font-[Number] text-slate-900 print:bg-white print:p-0">
+    <div className="min-h-screen bg-slate-100 px-3 py-6 font-sans text-slate-900 print:bg-white print:p-0">
       <div className="mx-auto mb-4 flex max-w-[148mm] items-center justify-between gap-3 print:hidden">
         <BackButton fallback="/admin/orders" hideOn={[]} />
         <div className="flex items-center gap-3">

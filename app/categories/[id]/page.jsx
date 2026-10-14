@@ -75,7 +75,7 @@ export default async function CategoryPage({ params, searchParams }) {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       <JsonLd data={breadcrumbLd(crumbs)} />
       <JsonLd data={listLd} />

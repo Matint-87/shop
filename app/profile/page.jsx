@@ -6,7 +6,7 @@ import { requireUser, toPublicUser } from "@/lib/dal";
 
 export const metadata = { title: "حساب کاربری", robots: { index: false, follow: false } };
 
-const SECTIONS = ["orders", "wallet", "addresses", "info", "appearance"];
+const SECTIONS = ["orders", "wallet", "addresses", "info", "security", "appearance"];
 
 export default async function ProfilePage({ searchParams }) {
   const { tab } = await searchParams;
@@ -14,7 +14,7 @@ export default async function ProfilePage({ searchParams }) {
   const user = await requireUser({ next: "/profile" });
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number]">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans">
       <Header />
       <main className="mx-auto w-full max-w-7xl px-3 pb-6 pt-4 sm:px-4 md:pt-6">
         <ProfilePageClient user={toPublicUser(user)} initialSection={section} />

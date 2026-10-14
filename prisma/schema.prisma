@@ -157,6 +157,7 @@ model User {
   walletTransactions WalletTransaction[]
   notifications      Notification[]
   pushSubscriptions  PushSubscription[]
+  sessions           UserSession[]
 
   @@map("users")
 }
@@ -644,4 +645,31 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+/// هر ورود موفق = یک «دستگاه/نشست». توکن JWT کاربر شناسه‌ی همین ردیف (sid) رو داره؛
+/// با حذف ردیف، همون دستگاه بلافاصله از حساب خارج می‌شه (بدون اینکه بقیه‌ی دستگاه‌ها دست بخورن).
+model UserSession {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// دستگاهِ اصلی = دستگاهی که حساب اولین‌بار روش ساخته شد (یا با فراموشی رمز دوباره تصاحب شد)؛
+  /// فقط همین دستگاه می‌تونه نشست‌های بقیه‌ی دستگاه‌ها رو ببنده
+  isOrigin Boolean @default(false) @map("is_origin")
+
+  userAgent  String? @map("user_agent")
+  /// برچسب خوانا: «Chrome روی Android» ...
+  browser    String?
+  os         String?
+  /// mobile | tablet | desktop
+  deviceType String  @default("desktop") @map("device_type")
+  ip         String?
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+
+  @@index([userId])
+  @@map("user_sessions")
 }

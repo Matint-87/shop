@@ -64,12 +64,20 @@ export default function LocationPermissionModal({ open, onAccept, onDecline }) {
           </p>
         </div>
 
-        <DialogFooter className="shrink-0 flex-col gap-2.5 border-t border-slate-100 bg-slate-50/60 px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 ">
-          <Button type="button" size="lg" onClick={onAccept} className="w-full">
-            <FaCrosshairs size={14} />
+        {/* نکته: DialogFooter به‌صورت پیش‌فرض از sm به بعد flex-row می‌شه (sm:flex-row)؛ چون tailwind-merge اون رو با flex-col خالی حذف نمی‌کنه،
+            دکمه‌ی اول کل ردیف رو می‌گرفت و دکمه‌ی دوم به یه دایره‌ی باریک گوشه‌ی چپ فشرده می‌شد. برای همین اینجا صریحاً sm:flex-col هم داده شده. */}
+        <DialogFooter className="shrink-0 flex-col gap-2.5 border-t border-slate-100 bg-slate-50/60 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:flex-col sm:justify-start sm:px-6">
+          <Button type="button" size="lg" onClick={onAccept} className="h-12 w-full min-w-0 px-4">
+            <FaCrosshairs size={14} aria-hidden="true" />
             ادامه
           </Button>
-          <Button type="button" size="lg" variant="outline" onClick={onDecline} className="w-full whitespace-normal">
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            onClick={onDecline}
+            className="h-auto min-h-12 w-full min-w-0 whitespace-normal px-4 py-2.5 text-center leading-6"
+          >
             خودم روی نقشه انتخاب می‌کنم
           </Button>
         </DialogFooter>

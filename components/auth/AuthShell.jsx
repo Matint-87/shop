@@ -5,7 +5,7 @@ import { FaLock, FaShoppingBasket } from "react-icons/fa";
  *  دکمه‌ی بازگشت داخل خودِ کارت فرم‌ها قرار می‌گیره (BackButton variant="inline"). */
 export default function AuthShell({ children, wide = false }) {
   return (
-    <div className="relative min-h-dvh bg-slate-50 font-[Number] text-slate-800">
+    <div className="relative min-h-dvh bg-slate-50 font-sans text-slate-800">
       {/* یک لایه‌ی رنگی ملایم بالای صفحه؛ با تغییر پالت سایت خودکار عوض می‌شه */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-linear-to-b from-green-100/70 to-transparent" />
       <div className={`relative mx-auto w-full px-4 py-6 sm:py-10 ${wide ? "max-w-2xl" : "max-w-md"}`}>

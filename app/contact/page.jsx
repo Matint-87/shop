@@ -2,7 +2,7 @@ import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { FaClock, FaEnvelope, FaMapMarkerAlt, FaPhoneAlt } from "react-icons/fa";
 import InfoPage, { P, Section } from "@/components/pages/InfoPage";
-import { STORE_INFO } from "@/lib/store-info";
+import { STORE_INFO, STORE_PHONE_FA, STORE_PHONE_TEL } from "@/lib/store-info";
 
 export const metadata = buildMetadata({
   title: "تماس با ما",
@@ -12,7 +12,7 @@ export const metadata = buildMetadata({
 
 export default function ContactPage() {
   const rows = [
-    { icon: FaPhoneAlt, label: "تلفن", value: STORE_INFO.phone, ltr: true, href: STORE_INFO.phone ? `tel:${STORE_INFO.phone.replace(/[^\d+]/g, "")}` : null },
+    { icon: FaPhoneAlt, label: "تلفن", value: STORE_INFO.phone ? STORE_PHONE_FA : "", ltr: true, href: STORE_PHONE_TEL || null },
     { icon: FaMapMarkerAlt, label: "آدرس فروشگاه", value: STORE_INFO.address },
     { icon: FaClock, label: "ساعات کاری", value: STORE_INFO.workingHours },
     { icon: FaEnvelope, label: "ایمیل", value: STORE_INFO.email, ltr: true, href: STORE_INFO.email ? `mailto:${STORE_INFO.email}` : null },

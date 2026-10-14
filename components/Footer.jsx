@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FaCarSide, FaClock, FaLock, FaMapMarkerAlt, FaPhoneAlt, FaShoppingBasket, FaTags } from "react-icons/fa";
-import { STORE_INFO } from "@/lib/store-info";
+import { STORE_INFO, STORE_PHONE_FA, STORE_PHONE_TEL } from "@/lib/store-info";
 import Reveal from "@/components/Reveal";
 
 const SHOP_LINKS = [
@@ -99,7 +99,9 @@ export default function Footer() {
                 {phone && (
                   <li className="flex items-center gap-2">
                     <FaPhoneAlt size={12} className="shrink-0 text-green-600" />
-                    <span dir="ltr">{phone}</span>
+                    <a href={STORE_PHONE_TEL} dir="ltr" className="font-bold text-slate-700 transition hover:text-green-700">
+                      {STORE_PHONE_FA}
+                    </a>
                   </li>
                 )}
                 {address && (

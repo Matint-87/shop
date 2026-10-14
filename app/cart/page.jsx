@@ -6,7 +6,7 @@ export const metadata = { title: "سبد خرید", robots: { index: false, foll
 
 export default function CartPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-[Number] text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 [&>*]:w-full font-sans text-slate-800">
       <Header />
       <main className="mx-auto max-w-6xl px-4 py-6">
         <CartPageClient />

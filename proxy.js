@@ -39,6 +39,7 @@ async function renewedToken(session) {
     role: session.role,
     tokenVersion: session.tv,
     profileCompleted: session.pc,
+    sessionId: session.sid, // دستگاه همون می‌مونه
   });
 }
 
@@ -90,5 +91,5 @@ export async function proxy(request) {
 // /auth عمداً بیرونه: اگه توکن امضای درست ولی کاربر بن/توکن باطل باشه، ریدایرکت رفت‌وبرگشتی (loop) ساخته می‌شد؛
 // صفحه‌ی ورود خودش (LoginFlow) کاربرِ واردشده رو به مسیر درست می‌فرسته.
 export const config = {
-  matcher: ["/((?!api|auth|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|sounds|icon.png|icon-192.png|icon-512.png|icon-maskable-512.png|favicon.ico|apple-icon.png|og-default.png|images|uploads).*)"],
+  matcher: ["/((?!api|auth|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|sounds|icon.png|icon-192.png|icon-512.png|icon-maskable-512.png|favicon.ico|apple-icon.png|og-default.png|font/|images|uploads).*)"],
 };

@@ -30,7 +30,7 @@ export default async function InvoicePage({ params }) {
   };
 
   return (
-    <div className="min-h-dvh bg-slate-100 px-3 py-6 font-[Number] text-slate-900 print:bg-white print:p-0">
+    <div className="min-h-dvh bg-slate-100 px-3 py-6 font-sans text-slate-900 print:bg-white print:p-0">
       {/* نوار ابزار — موقع چاپ دیده نمی‌شه */}
       <div className="mx-auto mb-4 flex max-w-[148mm] items-center justify-between gap-3 print:hidden">
         <BackButton withLabel fallback="/profile?tab=orders" hideOn={[]} />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaMapMarkerAlt, FaPalette, FaPen, FaShoppingBag, FaUser, FaWallet } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPalette, FaPen, FaShieldAlt, FaShoppingBag, FaUser, FaWallet } from "react-icons/fa";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useConfirm } from "@/components/providers/ConfirmProvider";
 import { toFaDigits } from "@/lib/phone";
@@ -14,6 +14,7 @@ import WalletPanel from "./WalletPanel";
 import AccountSidebar from "./AccountSidebar";
 import MobileProfileNav from "./MobileProfileNav";
 import AppearancePanel from "./AppearancePanel";
+import SecurityPanel from "./SecurityPanel";
 import { notify } from "@/lib/toast";
 
 function InfoRow({ label, value }) {
@@ -34,6 +35,7 @@ const SECTION_META = {
   wallet: { title: "کیف پول", icon: FaWallet },
   addresses: { title: "آدرس‌های من", icon: FaMapMarkerAlt },
   info: { title: "اطلاعات حساب کاربری", icon: FaUser },
+  security: { title: "امنیت و دستگاه‌ها", icon: FaShieldAlt },
   appearance: { title: "ظاهر سایت", icon: FaPalette },
 };
 
@@ -141,6 +143,16 @@ export default function ProfilePageClient({ user: initialUser, initialSection = 
               {meta.title}
             </h2>
             <AddressList />
+          </>
+        ) : section === "security" ? (
+          <>
+            <h2 className="mb-4 hidden items-center gap-2 text-sm font-extrabold text-slate-800 md:flex">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-700">
+                <SectionIcon size={14} />
+              </span>
+              {meta.title}
+            </h2>
+            <SecurityPanel phone={user.phone} />
           </>
         ) : section === "appearance" ? (
           <>

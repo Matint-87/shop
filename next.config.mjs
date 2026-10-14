@@ -15,6 +15,11 @@ const nextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       {
+        // فونت‌ها: یک ماه کش مرورگر (به‌صورت پیش‌فرض Next برای فایل‌های public کش نمی‌ذاره)
+        source: "/font/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=2592000, stale-while-revalidate=86400" }],
+      },
+      {
         // Service Worker (اعلان پوش) هیچ‌وقت نباید کش بشه تا نسخه‌ی جدید فوراً برسه
         source: "/sw.js",
         headers: [

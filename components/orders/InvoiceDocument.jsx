@@ -5,7 +5,7 @@ import { formatJalaliDateTime } from "@/lib/jalali";
 import { toFaDigits } from "@/lib/phone";
 import { formatSlot, slotFieldLabel } from "@/lib/delivery-slots";
 import { SHIPPING_LABELS, deliveryMessage, shippingFeeLabel } from "@/lib/shipping";
-import { STORE_INFO } from "@/lib/store-info";
+import { STORE_INFO, STORE_PHONE_FA } from "@/lib/store-info";
 
 const STATUS_LABELS = {
   PENDING: "در انتظار بررسی",
@@ -54,7 +54,7 @@ export default function InvoiceDocument({ order, buyer, payment, breakAfter = fa
           <div className="rounded-xl border border-slate-300 p-3">
             <h2 className="mb-1 text-sm font-bold">مشخصات فروشنده</h2>
             <InfoLine label="نام">{STORE_INFO.name}</InfoLine>
-            {STORE_INFO.phone && <InfoLine label="تلفن">{STORE_INFO.phone}</InfoLine>}
+            {STORE_INFO.phone && <InfoLine label="تلفن">{STORE_PHONE_FA}</InfoLine>}
             {STORE_INFO.address && <InfoLine label="نشانی">{STORE_INFO.address}</InfoLine>}
             {STORE_INFO.economicCode && <InfoLine label="کد اقتصادی">{toFaDigits(STORE_INFO.economicCode)}</InfoLine>}
             {STORE_INFO.website && <InfoLine label="وب‌سایت">{STORE_INFO.website}</InfoLine>}

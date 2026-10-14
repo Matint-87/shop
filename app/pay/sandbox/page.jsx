@@ -23,7 +23,7 @@ export default async function SandboxGatewayPage({ searchParams }) {
   const q = encodeURIComponent(authority);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-slate-100 px-4 font-[Number]">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-100 px-4 font-sans">
       <div className="w-full max-w-sm rounded-3xl border border-amber-200 bg-white p-6 text-center shadow-sm">
         <p className="mb-3 inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
           درگاه آزمایشی — پولی کسر نمی‌شود

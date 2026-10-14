@@ -1,19 +1,2 @@
-import { handler, ok, readJson } from "@/lib/api";
-import { isOnboarded, requireApiUser } from "@/lib/dal";
-import { prisma } from "@/lib/db";
-import { createSession } from "@/lib/session";
-
-/**
- * خروج از سایر دستگاه‌ها: نسخه‌ی توکن زیاد می‌شه و همه‌ی JWTهای قبلی باطل می‌شن؛
- * دستگاه فعلی با توکن جدید وارد می‌مونه.
- */
-export const POST = handler(async (request) => {
-  await readJson(request);
-  const user = await requireApiUser();
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { tokenVersion: { increment: 1 } },
-  });
-  await createSession(updated, { profileCompleted: await isOnboarded(updated) });
-  return ok();
-});
+// «خروج از سایر دستگاه‌ها» — همون منطق /api/profile/sessions/revoke-others (برای سازگاری با کدهای قدیمی نگه داشته شده)
+export { POST } from "@/app/api/profile/sessions/revoke-others/route";

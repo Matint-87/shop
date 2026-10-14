@@ -3,7 +3,7 @@ import AppProviders from "@/components/providers/AppProviders";
 import { PALETTE_BY_ID, DEFAULT_PALETTE } from "@/lib/palettes";
 import { getSitePalette } from "@/lib/settings";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
-import { STORE_INFO } from "@/lib/store-info";
+import { STORE_INFO, STORE_PHONE_E164 } from "@/lib/store-info";
 import { JsonLd, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absUrl } from "@/lib/site";
 
@@ -40,7 +40,7 @@ function siteJsonLd() {
     description: SITE_DESCRIPTION,
     priceRange: "$$",
     currenciesAccepted: "IRR",
-    ...(STORE_INFO.phone && { telephone: STORE_INFO.phone }),
+    ...(STORE_INFO.phone && { telephone: STORE_PHONE_E164 }),
     ...(STORE_INFO.email && { email: STORE_INFO.email }),
     ...(STORE_INFO.openingHoursSchema && { openingHours: STORE_INFO.openingHoursSchema }),
     ...(STORE_INFO.address && {
@@ -87,11 +87,13 @@ export default async function RootLayout({ children }) {
     <html
       lang="fa"
       dir="rtl"
-      className="font-[Number]"
+      className="font-sans"
       data-palette={palette === DEFAULT_PALETTE ? undefined : palette}
       suppressHydrationWarning
     >
       <head>
+        {/* فونت اصلی سایت از همون اول دانلود بشه تا متن‌ها با فونت پیش‌فرض نپرن */}
+        <link rel="preload" href="/font/Vazirmatn-FD-Medium.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">

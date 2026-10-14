@@ -146,7 +146,7 @@ export default function AdminShell({ admin, children }) {
   if (pathname.startsWith("/admin/print")) return <>{children}</>;
 
   return (
-    <div className="min-h-dvh bg-slate-50 font-[Number] md:flex">
+    <div className="min-h-dvh bg-slate-50 font-sans md:flex">
       {/* نوار بالای موبایل */}
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-200/70 bg-white/85 px-3 py-2.5 backdrop-blur-xl md:hidden">
         <button

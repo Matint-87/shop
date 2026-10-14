@@ -69,7 +69,7 @@ export function Select({ value, onChange, children, className, disabled, id, nam
           sideOffset={6}
           collisionPadding={12}
           className={cn(
-            "z-[200] max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden rounded-2xl border border-slate-200 bg-white font-[Number] text-slate-800 shadow-pop",
+            "z-[200] max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden rounded-2xl border border-slate-200 bg-white font-sans text-slate-800 shadow-pop",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             contentClassName,
           )}
