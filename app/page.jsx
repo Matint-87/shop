@@ -6,12 +6,13 @@ import HomeContent from "@/components/HomeContent";
 import BottomNav from "@/components/BottomNav";
 import { getActiveBanners } from "@/lib/banners";
 import { getActiveCategories, getProductsForShelf } from "@/lib/catalog";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from "@/lib/site";
 
 // بنرها از پنل مدیریت عوض می‌شن؛ پس صفحه نباید موقع build ثابت بشه
 export const dynamic = "force-dynamic";
 
-export const metadata = { alternates: { canonical: "/" } };
+// عنوان صفحه‌ی اصلی صریحاً اینجا هست تا نام برند (با و بدون فاصله) اول عنوانِ نتیجه‌ی گوگل بیاد
+export const metadata = { title: { absolute: SITE_TITLE }, description: SITE_DESCRIPTION, alternates: { canonical: "/" } };
 
 export default async function Home() {
   // دسته‌ها و محصولات از سرور رندر می‌شن تا لینک‌هاشون توی HTML اولیه (قابل خزش برای گوگل) باشه
@@ -29,7 +30,7 @@ export default async function Home() {
       {/* وقتی بنر نمایش داده می‌شه (و Hero با h1 اش نیست)، صفحه همچنان یک h1 داره */}
       {banners.length > 0 ? (
         <>
-          <h1 className="sr-only">{SITE_NAME} | خرید آنلاین مایحتاج روزانه</h1>
+          <h1 className="sr-only">{SITE_NAME} | سوپر مارکت آنلاین رحیمی، خرید آنلاین مایحتاج روزانه</h1>
           <BannerSlider banners={banners} />
         </>
       ) : (
