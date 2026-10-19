@@ -78,6 +78,24 @@ export default function AddressMapButton({ address, title = "موقعیت آدر
             >
               <FaDirections size={12} /> مسیریابی با گوگل مپ
             </a>
+            {/* نشان و بلد: لینک وب عمومی با مختصات؛ نیازی به کلید API یا تنظیمات ندارن.
+                روی موبایل اگه اپ نصب باشه معمولاً خودش لینک رو باز می‌کنه، وگرنه نسخه‌ی وب باز می‌شه. */}
+            <a
+              href={`https://neshan.org/maps/@${lat},${lng},17z`}
+              target="_blank"
+              rel="noreferrer"
+              className={linkCls}
+            >
+              <FaDirections size={12} /> مسیریابی با نشان
+            </a>
+            <a
+              href={`https://balad.ir/location?latitude=${lat}&longitude=${lng}#17.00/${lat}/${lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className={linkCls}
+            >
+              <FaDirections size={12} /> مسیریابی با بلد
+            </a>
             <a
               href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
               target="_blank"
@@ -86,7 +104,7 @@ export default function AddressMapButton({ address, title = "موقعیت آدر
             >
               OpenStreetMap <FaExternalLinkAlt size={9} />
             </a>
-            <button type="button" onClick={copyCoords} className={`${linkCls} col-span-2`} aria-live="polite">
+            <button type="button" onClick={copyCoords} className={`${linkCls} col-span-2 sm:col-span-1`} aria-live="polite">
               {copied ? <FaCheck size={11} className="text-green-700" /> : <FaCopy size={11} />}
               <span dir="ltr">{copied ? "کپی شد" : coordText}</span>
             </button>
