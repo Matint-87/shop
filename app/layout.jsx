@@ -16,6 +16,8 @@ export const metadata = {
   ...(process.env.GOOGLE_SITE_VERIFICATION && { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }),
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  // تأیید مالکیت دامنه در اینماد: <meta name="enamad" content="..." /> در هدر همه‌ی صفحه‌ها (از جمله صفحه اصلی)
+  other: { enamad: "46815544" },
   // canonical عمداً اینجا نیست: اگه توی layout ریشه باشه، هر صفحه‌ای که canonical خودش رو نداره به «/» اشاره می‌کنه
   openGraph: {
     type: "website",
