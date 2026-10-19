@@ -203,13 +203,13 @@ export default function LoginFlow({ next = "/" }) {
   function resendCode() {
     run(async () => {
       try {
-        // resend: true → سرور فاصله‌ی ۳ دقیقه‌ای رو اعمال می‌کنه
+        // resend: true → سرور فاصله‌ی ۲ دقیقه‌ای رو اعمال می‌کنه
         const data = await api("POST", "/api/auth/otp/send", { phone, purpose, resend: true });
         beginOtp({ ...data, isNew });
       } catch (err) {
         const retryAfter = err.data?.retryAfter;
         if (retryAfter && retryAfter <= OTP_RESEND_SECONDS) {
-          // هنوز از فاصله‌ی ۳ دقیقه‌ای نگذشته → تایمر رو با زمان واقعیِ سرور تنظیم کن
+          // هنوز از فاصله‌ی ۲ دقیقه‌ای نگذشته → تایمر رو با زمان واقعیِ سرور تنظیم کن
           setResendAt(Date.now() + retryAfter * 1000);
         } else if (err.status === 429 && retryAfter) {
           // سقف روزانه (۱۰ بار) تمام شده
@@ -273,7 +273,7 @@ export default function LoginFlow({ next = "/" }) {
   const strength = rules.filter((r) => r.ok).length + (allRulesOk && strongBonus ? 1 : 0);
   const confirmState = !confirm ? "" : confirm === password ? "match" : "mismatch";
 
-  // یک تایمر واحد: «ارسال مجدد کد تا ...»؛ اعتبار کد و فاصله‌ی ارسال مجدد هر دو ۳ دقیقه‌ست
+  // یک تایمر واحد: «ارسال مجدد کد تا ...»؛ اعتبار کد و فاصله‌ی ارسال مجدد هر دو ۲ دقیقه‌ست
   const timerTotal = Math.max(OTP_RESEND_SECONDS, secondsLeft);
   const codeExpired = expiresLeft === 0;
 

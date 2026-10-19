@@ -2,18 +2,19 @@ import { ApiError, handler, ok, readJson } from "@/lib/api";
 import { requireApiUser } from "@/lib/dal";
 import { prisma } from "@/lib/db";
 import { lockOrder, moneyByOrder, orderMoney, publicPayment } from "@/lib/finance";
-import { gatewayMode, startGatewayPayment } from "@/lib/gateway";
 import { NOT_PAYABLE_STATUSES } from "@/lib/order-constants";
 import { rateLimit } from "@/lib/rate-limit";
 import { payOrderSchema } from "@/lib/schemas";
 import { debitWallet } from "@/lib/wallet";
 
 /**
- * پرداخت سفارش (بعد از ثبت). بدنه: { useWallet: boolean }
- *  • useWallet=true  → تا سقف موجودی/مبلغ مانده از کیف پول کم می‌شه، «بقیه» (اگه مانده‌ای بود) از درگاه.
- *  • useWallet=false → کل مبلغ مانده از درگاه.
- * اگه بعد از کیف پول چیزی نمونه، {paid: true} برمی‌گرده؛ وگرنه {redirectUrl} برای رفتن به درگاه.
- * کیف پول و ساخت تراکنش‌ها با هم و زیر قفل ردیف سفارش انجام می‌شن.
+ * پرداخت سفارش از «کیف پول» (بعد از ثبت سفارش). بدنه: { useWallet: true }
+ *
+ * پرداخت آنلاین (درگاه) حذف شده: مبلغ سفارش هنگام تحویل (حضوری یا درب منزل) دریافت می‌شه و مدیر بعد از تحویل
+ * از پنل ثبت می‌کنه پول به کدوم صندوق / بانک / کارت‌خوان رسیده. مشتری فقط می‌تونه از اعتبار کیف پولش پیش‌پرداخت کنه:
+ *  • موجودی کیف پول ≥ مانده → کل سفارش پرداخت می‌شه ({paid: true}).
+ *  • موجودی کمتر → همون مقدار از کیف پول کم می‌شه و «باقی‌مانده» هنگام تحویل پرداخت می‌شه ({paid: false, remaining}).
+ * کم‌کردن از کیف پول و ساخت تراکنش با هم و زیر قفل ردیف سفارش انجام می‌شن.
  */
 export const POST = handler(async (request, { params }) => {
   const user = await requireApiUser();
@@ -21,6 +22,9 @@ export const POST = handler(async (request, { params }) => {
   if (!/^\d{8}$/.test(code)) throw new ApiError(400, "کد سفارش نامعتبر است");
   await rateLimit(`pay:${user.id}`, 30, 60 * 60, "تعداد تلاش‌های پرداخت بیش از حد مجاز است. کمی بعد دوباره تلاش کنید.");
   const { useWallet } = payOrderSchema.parse(await readJson(request));
+  if (!useWallet) {
+    throw new ApiError(400, "پرداخت آنلاین فعال نیست. مبلغ سفارش هنگام تحویل دریافت می‌شود یا می‌توانید از کیف پول پرداخت کنید.");
+  }
 
   const order = await prisma.order.findFirst({ where: { code, userId: user.id } });
   if (!order) throw new ApiError(404, "سفارش پیدا نشد");
@@ -35,25 +39,17 @@ export const POST = handler(async (request, { params }) => {
       : "این سفارش قبلاً پرداخت شده است");
   }
   const fresh = await prisma.user.findUnique({ where: { id: user.id }, select: { walletBalance: true } });
-  const walletPart = useWallet ? Math.min(fresh.walletBalance, remaining) : 0;
-  const gatewayPart = remaining - walletPart;
+  const walletPart = Math.min(fresh.walletBalance, remaining);
+  if (walletPart === 0) throw new ApiError(409, "موجودی کیف پول شما صفر است");
 
-  if (useWallet && walletPart === 0) throw new ApiError(409, "موجودی کیف پول شما صفر است");
-  if (gatewayPart > 0 && gatewayMode() === "none") {
-    throw new ApiError(503, "پرداخت آنلاین در حال حاضر فعال نیست. می‌توانید با شارژ کیف پول یا تماس با پشتیبانی پرداخت کنید.");
-  }
-
-  // ───── ۲) شروع درگاه (قبل از برداشت از کیف پول؛ اگه درگاه خطا بده چیزی از کیف پول کم نشده) ─────
-  const gateway = gatewayPart > 0 ? await startGatewayPayment({ amount: gatewayPart, orderCode: code, mobile: user.phone }) : null;
-
-  // ───── ۳) ثبت نهایی: داخل یک تراکنش و زیر قفل سفارش ─────
+  // ───── ۲) ثبت نهایی: داخل یک تراکنش و زیر قفل سفارش ─────
   await prisma.$transaction(
     async (tx) => {
       await lockOrder(tx, order.id);
       const current = await tx.order.findUnique({ where: { id: order.id } });
       if (NOT_PAYABLE_STATUSES.includes(current.status)) throw new ApiError(409, "این سفارش لغو شده و قابل پرداخت نیست");
 
-      // تلاش‌های قبلیِ ناتمام درگاه کنار گذاشته می‌شن
+      // تلاش‌های ناتمامِ قدیمیِ درگاه (از قبل از حذف درگاه) کنار گذاشته می‌شن
       await tx.transaction.updateMany({
         where: { orderId: order.id, type: "PAYMENT", status: "PENDING", authority: { not: null } },
         data: { status: "FAILED", note: "پرداخت ناتمام؛ با تلاش جدید جایگزین شد" },
@@ -63,50 +59,34 @@ export const POST = handler(async (request, { params }) => {
         throw new ApiError(409, "وضعیت پرداخت این سفارش تغییر کرد. صفحه را تازه کنید و دوباره تلاش کنید.");
       }
 
-      if (walletPart > 0) {
-        await debitWallet(tx, {
-          userId: user.id,
+      await debitWallet(tx, {
+        userId: user.id,
+        amount: walletPart,
+        reason: "ORDER_PAYMENT",
+        orderCode: code,
+        note: `پرداخت سفارش ${code}`,
+      });
+      await tx.transaction.create({
+        data: {
+          type: "PAYMENT",
+          status: "SUCCESS",
+          method: "WALLET",
           amount: walletPart,
-          reason: "ORDER_PAYMENT",
-          orderCode: code,
-          note: `پرداخت سفارش ${code}`,
-        });
-        await tx.transaction.create({
-          data: {
-            type: "PAYMENT",
-            status: "SUCCESS",
-            method: "WALLET",
-            amount: walletPart,
-            orderId: order.id,
-            userId: user.id,
-            note: "پرداخت از کیف پول",
-          },
-        });
-      }
-      if (gateway) {
-        await tx.transaction.create({
-          data: {
-            type: "PAYMENT",
-            status: "PENDING",
-            method: "ONLINE",
-            amount: gatewayPart,
-            orderId: order.id,
-            userId: user.id,
-            authority: gateway.authority,
-            note: "در انتظار پرداخت از درگاه",
-          },
-        });
-      }
+          orderId: order.id,
+          userId: user.id,
+          note: "پرداخت از کیف پول",
+        },
+      });
     },
     { timeout: 20_000 },
   );
 
   const after = await prisma.user.findUnique({ where: { id: user.id }, select: { walletBalance: true } });
+  const left = remaining - walletPart;
   return ok({
-    paid: !gateway,
+    paid: left === 0,
     walletPaid: walletPart,
-    gatewayAmount: gatewayPart,
-    redirectUrl: gateway?.redirectUrl ?? null,
+    remaining: left, // باقی‌مانده که هنگام تحویل دریافت می‌شه
     walletBalance: after?.walletBalance ?? 0,
   });
 });

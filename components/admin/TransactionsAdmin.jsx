@@ -11,6 +11,8 @@ import ListFooter from "@/components/admin/ListFooter";
 import { useInfiniteList } from "@/components/admin/useInfiniteList";
 import { Card, EmptyRow, PageHeader, theadRowCls, trCls } from "@/components/admin/ui";
 import {
+  METHOD_ACCOUNT_KIND,
+  PAYMENT_ACCOUNT_KIND_META,
   PAYMENT_METHOD_LABELS,
   PAYMENT_METHOD_OPTIONS,
   TRANSACTION_STATUS_META,
@@ -57,7 +59,7 @@ function Badge({ meta, fallback }) {
 }
 
 /** mode: "ALL" | "PAYMENT" | "REFUND" */
-export default function TransactionsAdmin({ mode = "ALL", filters, initial, defaultOrderCode = "" }) {
+export default function TransactionsAdmin({ mode = "ALL", filters, initial, defaultOrderCode = "", accounts = [] }) {
   const confirm = useConfirm();
   const cfg = MODES[mode];
   const list = useInfiniteList({ endpoint: "/api/admin/transactions", itemsKey: "transactions", filters, initial });
@@ -66,15 +68,20 @@ export default function TransactionsAdmin({ mode = "ALL", filters, initial, defa
   const [busyId, setBusyId] = useState(null);
 
   const [showForm, setShowForm] = useState(Boolean(defaultOrderCode));
-  const defaultMethod = mode === "REFUND" ? "WALLET" : "ONLINE";
-  const [form, setForm] = useState({ orderCode: defaultOrderCode, amount: "", method: defaultMethod, reference: "", note: "" });
+  const defaultMethod = mode === "REFUND" ? "WALLET" : "CASH";
+  const [form, setForm] = useState({ orderCode: defaultOrderCode, amount: "", method: defaultMethod, accountId: "", reference: "", note: "" });
   const [errors, setErrors] = useState({});
   const [creating, setCreating] = useState(false);
 
   function setField(name, value) {
-    setForm((f) => ({ ...f, [name]: value }));
+    // با عوض‌شدن روش، محل دریافتِ انتخاب‌شده (که مخصوص روش قبلی بود) پاک می‌شه
+    setForm((f) => ({ ...f, [name]: value, ...(name === "method" ? { accountId: "" } : {}) }));
     setErrors((e) => (e[name] ? { ...e, [name]: undefined } : e));
   }
+
+  // محل‌های دریافتِ فعالِ هم‌نوع با روش انتخاب‌شده (نقدی ← صندوق، کارت به کارت ← بانک، کارت‌خوان ← کارت‌خوان)
+  const neededKind = METHOD_ACCOUNT_KIND[form.method];
+  const accountChoices = neededKind ? accounts.filter((a) => a.isActive && a.kind === neededKind) : [];
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -87,11 +94,12 @@ export default function TransactionsAdmin({ mode = "ALL", filters, initial, defa
         orderCode: form.orderCode,
         amount: form.amount,
         method: form.method,
+        accountId: neededKind ? form.accountId || null : null,
         reference: form.reference || null,
         note: form.note || null,
       });
       notify.success("تراکنش ثبت شد.");
-      setForm({ orderCode: "", amount: "", method: defaultMethod, reference: "", note: "" });
+      setForm({ orderCode: "", amount: "", method: defaultMethod, accountId: "", reference: "", note: "" });
       setShowForm(false);
       list.reload();
     } catch (err) {
@@ -123,6 +131,8 @@ export default function TransactionsAdmin({ mode = "ALL", filters, initial, defa
     ...(mode === "ALL" ? [{ name: "type", label: "نوع", options: TRANSACTION_TYPE_OPTIONS }] : []),
     { name: "status", label: "وضعیت", options: statusOptions },
     { name: "method", label: "روش", options: PAYMENT_METHOD_OPTIONS },
+    // فیلتر بر اساس صندوق / بانک / کارت‌خوان (فقط وقتی حداقل یکی تعریف شده)
+    ...(accounts.length > 0 ? [{ name: "account", label: "محل دریافت", options: accounts.map((a) => ({ value: a.id, label: a.name })) }] : []),
   ];
 
   return (
@@ -157,6 +167,32 @@ export default function TransactionsAdmin({ mode = "ALL", filters, initial, defa
                   ))}
                 </Select>
               </Field>
+              {neededKind && (
+                <Field
+                  label={`${PAYMENT_ACCOUNT_KIND_META[neededKind].label} (محل دریافت)`}
+                  htmlFor="tAccount"
+                  error={errors.accountId}
+                  required={mode === "PAYMENT"}
+                >
+                  <Select id="tAccount" value={form.accountId} onChange={(e) => setField("accountId", e.target.value)} className={inputCls(Boolean(errors.accountId))}>
+                    <option value="">{mode === "PAYMENT" ? "انتخاب کنید…" : "بدون انتخاب"}</option>
+                    {accountChoices.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </Select>
+                  {accountChoices.length === 0 && (
+                    <p className="mt-1 text-xs text-amber-600">
+                      هنوز {PAYMENT_ACCOUNT_KIND_META[neededKind].label}ی تعریف نشده؛ از{" "}
+                      <Link href="/admin/finance/accounts" className="font-bold underline">
+                        صندوق‌ها و بانک‌ها
+                      </Link>{" "}
+                      اضافه کنید.
+                    </p>
+                  )}
+                </Field>
+              )}
               <Field label="شماره پیگیری" htmlFor="tRef" error={errors.reference}>
                 <input id="tRef" dir="ltr" value={form.reference} onChange={(e) => setField("reference", e.target.value)} className={inputCls(Boolean(errors.reference))} />
               </Field>
@@ -222,7 +258,10 @@ export default function TransactionsAdmin({ mode = "ALL", filters, initial, defa
                     {t.type === "REFUND" ? "−" : ""}
                     {formatToman(t.amount)}
                   </td>
-                  <td className="py-3 pe-3 text-slate-600">{PAYMENT_METHOD_LABELS[t.method] ?? t.method}</td>
+                  <td className="py-3 pe-3 text-slate-600">
+                    {PAYMENT_METHOD_LABELS[t.method] ?? t.method}
+                    {t.accountName && <p className="mt-0.5 text-xs text-slate-400">{t.accountName}</p>}
+                  </td>
                   <td className="whitespace-nowrap py-3 pe-3 text-slate-600">{formatJalaliDateTime(t.createdAt)}</td>
                   <td className="py-3 pe-3">
                     <Badge meta={TRANSACTION_STATUS_META[t.status]} fallback={t.status} />

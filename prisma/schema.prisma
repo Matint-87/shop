@@ -68,6 +68,14 @@ enum PaymentMethod {
   CASH // نقدی / پرداخت در محل
   CARD_TO_CARD // کارت به کارت
   WALLET // کیف پول سایت (پرداخت از اعتبار یا برگشت وجه به کیف پول)
+  POS // کارت‌خوان (دستگاه POS فروشگاه یا پیک)
+}
+
+/// نوع «محل دریافت وجه» که مدیر تعریف می‌کنه: صندوق (نقد)، حساب بانکی (کارت به کارت) یا کارت‌خوان
+enum PaymentAccountKind {
+  CASH_BOX // صندوق (پول نقد)
+  BANK // بانک / شماره کارت (کارت به کارت)
+  CARD_READER // دستگاه کارت‌خوان
 }
 
 /// چه کسی سفارش رو لغو کرده
@@ -484,13 +492,47 @@ model Transaction {
   /// شناسه‌ی پرداخت درگاه (Authority) — فقط برای پرداخت‌هایی که کاربر خودش از درگاه شروع کرده
   authority String? @unique
 
+  /// صندوق / بانک / کارت‌خوانی که این مبلغ بهش رسیده (برای دریافت‌های دستی مدیر بعد از تحویل سفارش)
+  accountId   String?         @map("account_id") @db.Uuid
+  account     PaymentAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  /// اسنپ‌شات نام محل دریافت (با حذف یا تغییر نام حساب هم گزارش خوانا می‌مونه)
+  accountName String?         @map("account_name")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([orderId])
   @@index([userId])
   @@index([type, status, createdAt])
+  @@index([accountId])
   @@map("transactions")
+}
+
+/// محل‌های دریافت وجه که مدیر تعریف می‌کنه (صندوق‌ها، بانک‌ها / کارت‌ها، کارت‌خوان‌ها).
+/// مدیر موقع ثبت دریافت پولِ هر سفارش، یکی از اینا رو انتخاب می‌کنه تا معلوم باشه پول کجا رفته.
+model PaymentAccount {
+  id String @id @default(uuid()) @db.Uuid
+
+  kind PaymentAccountKind
+  /// نام نمایشی: «صندوق مغازه»، «بانک ملی — کارت اصلی»، «کارت‌خوان پیک ۱»
+  name String
+  /// نام بانک (فقط برای kind = BANK و CARD_READER؛ اختیاری)
+  bankName String? @map("bank_name")
+  /// شماره کارت یا شبا برای نمایش به ادمین (اختیاری)
+  cardNumber String? @map("card_number")
+  /// نام صاحب حساب (اختیاری)
+  holderName String? @map("holder_name")
+
+  isActive  Boolean @default(true) @map("is_active")
+  sortOrder Int     @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@index([isActive, sortOrder])
+  @@map("payment_accounts")
 }
 
 /// لاگ کارهای ادمین‌ها (چه کسی، چه چیزی رو، کِی تغییر داد)

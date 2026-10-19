@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaCarSide, FaClock, FaLock, FaMapMarkerAlt, FaPhoneAlt, FaShoppingBasket, FaTags } from "react-icons/fa";
+import { FaCarSide, FaClock, FaMapMarkerAlt, FaMoneyBillWave, FaPhoneAlt, FaShoppingBasket, FaTags } from "react-icons/fa";
 import { STORE_INFO, STORE_PHONE_FA, STORE_PHONE_TEL } from "@/lib/store-info";
 import Reveal from "@/components/Reveal";
 
@@ -28,7 +28,7 @@ const INFO_LINKS = [
 const TRUST = [
   { label: "ارسال سریع", icon: FaCarSide },
   { label: "انتخاب زمان تحویل", icon: FaClock },
-  { label: "پرداخت امن", icon: FaLock },
+  { label: "پرداخت هنگام تحویل", icon: FaMoneyBillWave },
   { label: "قیمت مناسب", icon: FaTags },
 ];
 

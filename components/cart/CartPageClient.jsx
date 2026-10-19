@@ -8,6 +8,7 @@ import {
   FaChevronRight,
   FaCreditCard,
   FaMapMarkerAlt,
+  FaMoneyBillWave,
   FaCarSide,
   FaRegClock,
   FaRegTrashAlt,
@@ -46,11 +47,27 @@ const STEPS = [
   { key: "pay", title: "پرداخت", short: "پرداخت", Icon: FaCreditCard },
 ];
 
-// شیوه‌های پرداخت. فعلاً فقط یک درگاه بانکی داریم؛ بعداً که درگاه واقعی وصل شد (lib/gateway.js)
-// اگه خواستی روش جدیدی اضافه کنی فقط یه آیتم به این لیست اضافه کن.
-const PAYMENT_METHODS = [
-  { value: "GATEWAY", label: "درگاه بانکی", description: "پرداخت آنلاین با تمامی کارت‌های بانکی", Icon: FaCreditCard },
-];
+// شیوه‌ی پرداخت: پرداخت آنلاین (درگاه) حذف شده و فقط «پرداخت پس از تحویل» داریم.
+// متنش به روش ارسال بستگی داره: حضوری ← توی فروشگاه، پیک ← درب منزل، پست ← هنگام تحویل مرسوله.
+// مدیر بعد از تحویل سفارش، از پنل ثبت می‌کنه پول نقد/کارت‌به‌کارت/کارت‌خوان به کدوم صندوق یا بانک رسیده.
+const PAY_ON_DELIVERY = {
+  PICKUP: {
+    label: "پرداخت حضوری",
+    description: "مبلغ سفارش را هنگام مراجعه و دریافت کالا در فروشگاه پرداخت می‌کنید.",
+  },
+  COURIER: {
+    label: "پرداخت درب منزل",
+    description: "مبلغ سفارش را هنگام تحویل، درب منزل به پیک پرداخت می‌کنید (نقدی یا با کارت‌خوان).",
+  },
+  POST: {
+    label: "پرداخت پس از تحویل",
+    description: "مبلغ سفارش را هنگام تحویل مرسوله پرداخت می‌کنید.",
+  },
+};
+const PAY_ON_DELIVERY_DEFAULT = {
+  label: "پرداخت پس از تحویل",
+  description: "مبلغ سفارش را هنگام تحویل پرداخت می‌کنید.",
+};
 
 // ───────────── نوار مراحل (بالای صفحه) ─────────────
 
@@ -466,28 +483,19 @@ function SlotStep({ quote, method, slotDays, slotDay, slotChosen, onSlotDay, onS
 
 // ───────────── انتخاب شیوه‌ی پرداخت ─────────────
 
-function PaymentPicker({ selected, onSelect }) {
+/** فقط یک گزینه داریم («پرداخت پس از تحویل»)؛ همیشه انتخاب‌شده‌ست و متنش با روش ارسال عوض می‌شه */
+function PaymentPicker({ shippingMethod }) {
+  const m = PAY_ON_DELIVERY[shippingMethod] ?? PAY_ON_DELIVERY_DEFAULT;
   return (
     <div role="radiogroup" aria-label="شیوه پرداخت" className="space-y-2">
-      {PAYMENT_METHODS.map((m) => {
-        const checked = m.value === selected;
-        const Icon = m.Icon;
-        return (
-          <label
-            key={m.value}
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-xs transition ${
-              checked ? "border-green-600 bg-green-50/60 ring-1 ring-green-600/30" : "border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            <input type="radio" name="payment" checked={checked} onChange={() => onSelect(m.value)} className="accent-green-700" />
-            <span className="min-w-0 flex-1 leading-6">
-              <span className="block font-bold text-slate-800">{m.label}</span>
-              <span className="block text-slate-500">{m.description}</span>
-            </span>
-            <Icon className="shrink-0 text-green-700" size={20} />
-          </label>
-        );
-      })}
+      <label className="flex items-center gap-3 rounded-xl border border-green-600 bg-green-50/60 p-3 text-xs ring-1 ring-green-600/30">
+        <input type="radio" name="payment" checked readOnly className="accent-green-700" />
+        <span className="min-w-0 flex-1 leading-6">
+          <span className="block font-bold text-slate-800">{m.label}</span>
+          <span className="block text-slate-500">{m.description}</span>
+        </span>
+        <FaMoneyBillWave className="shrink-0 text-green-700" size={20} />
+      </label>
     </div>
   );
 }
@@ -553,16 +561,15 @@ export default function CartPageClient() {
   const [slotDate, setSlotDate] = useState(null); // روزِ انتخاب‌شده برای تحویل/دریافت (کلید روز میلادی)
   const [slotStart, setSlotStart] = useState(null); // ساعت شروع بازه‌ی انتخاب‌شده («HH:MM»)
   const [quoteNonce, setQuoteNonce] = useState(0); // برای گرفتن دوباره‌ی بازه‌ها (وقتی سرور گفت زمان انتخاب‌شده دیگه معتبر نیست)
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0].value);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // سفارشِ ساخته‌شده. بعد از ساخته‌شدن، اگه شروع پرداخت خطا بده با «تلاش دوباره» سفارش تکراری ساخته نمی‌شه
+  // سفارشِ ساخته‌شده. بعد از ساخته‌شدن، حتی اگه رفتن به صفحه‌ی سفارش‌ها دیر بشه، با کلیک دوباره سفارش تکراری ساخته نمی‌شه
   const [order, setOrder] = useState(null);
   const synced = useRef(false);
   // قفل هم‌زمان: بین کلیک و setSubmitting یه await (چک وضعیت فروشگاه) هست؛ بدون این، دو کلیک پشت‌سرهم دو سفارش (و دو بار رزرو موجودی) می‌ساخت
   const paying = useRef(false);
 
-  // برگشت از درگاه با دکمه‌ی Back مرورگر: صفحه از حافظه‌ی bfcache با حالت «در حال انتقال…» برمی‌گرده و دکمه برای همیشه قفل می‌مونه
+  // برگشت با دکمه‌ی Back مرورگر: صفحه از حافظه‌ی bfcache با حالت «در حال ثبت…» برمی‌گرده و دکمه برای همیشه قفل می‌مونه
   useEffect(() => {
     const onShow = (e) => {
       if (e.persisted) {
@@ -737,7 +744,7 @@ export default function CartPageClient() {
     goToStep("pay");
   }
 
-  // ───── مرحله‌ی ۳: ساخت سفارش + رفتن به درگاه ─────
+  // ───── مرحله‌ی آخر: ثبت سفارش (پرداخت پس از تحویل؛ نیازی به درگاه نیست) ─────
   async function handlePay() {
     if (paying.current) return;
     if (!user) return router.push(LOGIN_URL);
@@ -762,14 +769,9 @@ export default function CartPageClient() {
         clearCart(); // سفارش ثبت شد؛ سبد خالی می‌شه (موجودی کالاها هم همین‌جا رزرو شده)
       }
 
-      // پرداخت فقط از درگاه (کیف پول توی این مرحله استفاده نمی‌شه)
-      const pay = await api("POST", `/api/orders/${current.code}/pay`, { useWallet: false });
-      if (pay.redirectUrl) {
-        redirecting = true; // تا رفتن به درگاه دکمه غیرفعال می‌مونه
-        window.location.assign(pay.redirectUrl);
-        return;
-      }
-      // (حالت غیرمنتظره) سفارش بدون رفتن به درگاه تسویه شد
+      // سفارش ثبت شد؛ مبلغش هنگام تحویل (حضوری یا درب منزل) دریافت می‌شه
+      notify.success(`سفارش شما با کد ${toFaDigits(current.code)} ثبت شد. مبلغ هنگام تحویل پرداخت می‌شود.`, { autoClose: 7000 });
+      redirecting = true; // تا رفتن به صفحه‌ی سفارش‌ها دکمه غیرفعال می‌مونه
       router.push("/profile?tab=orders");
     } catch (err) {
       if (err.status === 401) return router.push(LOGIN_URL);
@@ -833,7 +835,7 @@ export default function CartPageClient() {
     address: { label: "ادامه فرآیند خرید", onClick: handleToShipping, disabled: authLoading || noAddress },
     shipping: { label: "ادامه فرآیند خرید", onClick: handleFromShipping, disabled: authLoading || quoteLoading },
     slot: { label: "ادامه فرآیند خرید", onClick: handleToPayment, disabled: authLoading || quoteLoading },
-    pay: { label: submitting ? "در حال انتقال به درگاه..." : "پرداخت", onClick: handlePay, disabled: submitting },
+    pay: { label: submitting ? "در حال ثبت سفارش..." : "ثبت سفارش", onClick: handlePay, disabled: submitting },
   };
   const cta = CTA_BY_STEP[step];
 
@@ -961,12 +963,12 @@ export default function CartPageClient() {
             <>
               {order && (
                 <p className="rounded-2xl bg-green-50 p-3 text-xs leading-6 text-green-800">
-                  سفارش شما با کد پیگیری <span className="font-bold">{toFaDigits(order.code)}</span> ثبت شده و تا زمان پرداخت در انتظار می‌ماند.
-                  اگه پرداخت انجام نشد، بعداً هم می‌توانید از بخش{" "}
+                  سفارش شما با کد پیگیری <span className="font-bold">{toFaDigits(order.code)}</span> ثبت شد و مبلغ آن هنگام تحویل دریافت می‌شود.
+                  وضعیت سفارش را از بخش{" "}
                   <Link href="/profile?tab=orders" className="font-bold underline">
                     سفارش‌ها
                   </Link>{" "}
-                  در حساب کاربری پرداخت کنید.
+                  در حساب کاربری پیگیری کنید.
                 </p>
               )}
               {(order?.deliverySlotStart || slotChosen) && (
@@ -982,7 +984,7 @@ export default function CartPageClient() {
               )}
               <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                 <h2 className="mb-3 text-sm font-bold text-slate-800">شیوه پرداخت</h2>
-                <PaymentPicker selected={paymentMethod} onSelect={setPaymentMethod} />
+                <PaymentPicker shippingMethod={order?.shippingMethod ?? shippingMethod} />
               </section>
             </>
           )}

@@ -3,6 +3,7 @@ import OrderDetail from "@/components/admin/OrderDetail";
 import { fullName } from "@/lib/admin-dal";
 import { requireAdmin, toPublicOrder } from "@/lib/dal";
 import { prisma } from "@/lib/db";
+import { fetchPaymentAccounts } from "@/lib/admin-queries";
 import { orderMoney } from "@/lib/finance";
 import { toPublicCourier } from "@/lib/dal";
 
@@ -17,13 +18,15 @@ export default async function AdminOrderDetailPage({ params }) {
   if (!order) notFound();
 
   // پیک‌های فعال (به‌علاوه‌ی پیک فعلی سفارش، حتی اگه بعداً غیرفعال شده باشه) و وضعیت مالی سفارش
-  const [couriers, money, txRows] = await Promise.all([
+  const [couriers, money, txRows, accounts] = await Promise.all([
     prisma.courier.findMany({
       where: { OR: [{ isActive: true }, ...(order.courierId ? [{ id: order.courierId }] : [])] },
       orderBy: { name: "asc" },
     }),
     orderMoney(prisma, order.id),
     prisma.transaction.findMany({ where: { orderId: order.id }, orderBy: { createdAt: "desc" }, take: 20 }),
+    // صندوق‌ها / بانک‌ها / کارت‌خوان‌های فعال برای «ثبت دریافت وجه» بعد از تحویل
+    fetchPaymentAccounts({ onlyActive: true }),
   ]);
 
   return (
@@ -34,6 +37,7 @@ export default async function AdminOrderDetailPage({ params }) {
         couriers={couriers.map(toPublicCourier)}
         money={money}
         buyerWallet={order.user.walletBalance}
+        accounts={accounts}
         transactions={txRows.map((t) => ({
           id: t.id,
           type: t.type,
@@ -41,6 +45,7 @@ export default async function AdminOrderDetailPage({ params }) {
           method: t.method,
           amount: t.amount,
           reference: t.reference,
+          accountName: t.accountName,
           createdAt: t.createdAt.toISOString(),
         }))}
       />

@@ -5,12 +5,14 @@ import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FaCheckCircle, FaFileInvoice } from "react-icons/fa";
-import { Spinner, btnPrimary, inputCls } from "@/components/ui/form";
+import { Field, Spinner, btnPrimary, inputCls } from "@/components/ui/form";
 import { Card, OrderStatusBadge, PageHeader } from "@/components/admin/ui";
 import CancelOrderDialog from "@/components/orders/CancelOrderDialog";
 import {
   ORDER_STATUS_OPTIONS,
+  PAYMENT_ACCOUNT_KIND_META,
   PAYMENT_METHOD_LABELS,
+  RECEIVE_METHOD_OPTIONS,
   TRANSACTION_STATUS_META,
   TRANSACTION_TYPE_META,
 } from "@/lib/admin-constants";
@@ -26,7 +28,7 @@ import AddressMapButton from "@/components/admin/AddressMapButton";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function OrderDetail({ order, buyer, couriers = [], money, transactions = [], buyerWallet = 0 }) {
+export default function OrderDetail({ order, buyer, couriers = [], money, transactions = [], buyerWallet = 0, accounts = [] }) {
   const router = useRouter();
   const [status, setStatus] = useState(order.status);
   const [busy, setBusy] = useState(false);
@@ -40,6 +42,43 @@ export default function OrderDetail({ order, buyer, couriers = [], money, transa
   const [trackingCode, setTrackingCode] = useState(order.trackingCode ?? "");
   const [savedTracking, setSavedTracking] = useState(order.trackingCode ?? "");
   const [trackingBusy, setTrackingBusy] = useState(false);
+
+  // ───── دریافت وجه بعد از تحویل: روش (نقد / کارت به کارت / کارت‌خوان) + صندوق / بانک / کارت‌خوانی که پول بهش رسیده ─────
+  const [receive, setReceive] = useState({ method: "CASH", accountId: "", amount: "", reference: "", note: "" });
+  const [receiveErrors, setReceiveErrors] = useState({});
+  const [receiveBusy, setReceiveBusy] = useState(false);
+
+  function setReceiveField(name, value) {
+    // با عوض‌شدن روش، محل دریافتِ انتخاب‌شده (که مخصوص روش قبلی بود) پاک می‌شه
+    setReceive((r) => ({ ...r, [name]: value, ...(name === "method" ? { accountId: "" } : {}) }));
+    setReceiveErrors((e) => (e[name] ? { ...e, [name]: undefined } : e));
+  }
+
+  async function saveReceive(e) {
+    e.preventDefault();
+    setReceiveBusy(true);
+    setReceiveErrors({});
+    setError("");
+    try {
+      await api("POST", "/api/admin/transactions", {
+        type: "PAYMENT",
+        orderCode: order.code,
+        amount: receive.amount.trim() || amountLeft, // خالی = کل مبلغ مانده
+        method: receive.method,
+        accountId: receive.accountId || null,
+        reference: receive.reference.trim() || null,
+        note: receive.note.trim() || null,
+      });
+      notify.success("دریافت وجه ثبت شد.");
+      setReceive({ method: receive.method, accountId: receive.accountId, amount: "", reference: "", note: "" });
+      router.refresh();
+    } catch (err) {
+      if (err.fields && Object.keys(err.fields).length) setReceiveErrors(err.fields);
+      else setError(err.message);
+    } finally {
+      setReceiveBusy(false);
+    }
+  }
 
   async function saveTracking() {
     setTrackingBusy(true);
@@ -83,6 +122,10 @@ export default function OrderDetail({ order, buyer, couriers = [], money, transa
     SHIPPING: { value: "DELIVERED", label: "تحویل شد" },
   }[status];
   const remaining = isDead ? 0 : Math.max(0, order.payable - money.paidSuccess);
+  // مبلغی که هنوز می‌شه دریافت کرد (پرداخت‌های «در انتظار» هم حساب می‌شن تا مبلغ دوباره ثبت نشه)
+  const amountLeft = isDead ? 0 : Math.max(0, order.payable - money.paidActive);
+  const receiveKind = RECEIVE_METHOD_OPTIONS.find((m) => m.value === receive.method)?.kind;
+  const receiveAccounts = accounts.filter((a) => a.kind === receiveKind);
   const paymentLabel =
     money.paidSuccess === 0
       ? "پرداخت‌نشده"
@@ -308,6 +351,7 @@ export default function OrderDetail({ order, buyer, couriers = [], money, transa
                   <li key={t.id} className="flex items-center justify-between gap-2">
                     <span className="text-slate-600">
                       {TRANSACTION_TYPE_META[t.type]?.label} — {PAYMENT_METHOD_LABELS[t.method] ?? t.method}
+                      {t.accountName && <span className="block text-slate-400">{t.accountName}</span>}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <span className={t.type === "REFUND" ? "text-orange-700" : "text-slate-800"}>
@@ -323,8 +367,8 @@ export default function OrderDetail({ order, buyer, couriers = [], money, transa
               </ul>
             )}
             <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-100 pt-3 text-xs">
-              <Link href={`/admin/finance/payments?order=${order.code}`} className="text-green-700 hover:underline">
-                ثبت پرداخت
+              <Link href={`/admin/finance/payments?order=${order.code}`} className="text-slate-500 hover:text-green-700">
+                ثبت پرداخت (پیشرفته)
               </Link>
               <Link href={`/admin/finance/transactions?q=${order.code}`} className="text-slate-500 hover:text-green-700">
                 تراکنش‌ها
@@ -336,6 +380,73 @@ export default function OrderDetail({ order, buyer, couriers = [], money, transa
               )}
             </div>
           </Card>
+
+          {/* دریافت وجه: مشتری هنگام تحویل (حضوری یا درب منزل) پول رو می‌ده؛ مدیر بعد از تحویل ثبت می‌کنه پول به کجا رسیده */}
+          {amountLeft > 0 && (
+            <Card title="دریافت وجه">
+              {status !== "DELIVERED" ? (
+                <p className="text-xs leading-6 text-slate-500">
+                  مشتری مبلغ سفارش ({formatToman(amountLeft)}) را هنگام تحویل می‌پردازد. بعد از «تحویل شد»، اینجا ثبت کنید پول نقد، کارت به کارت یا
+                  کارت‌خوان، به کدام صندوق یا بانک رسیده است.
+                </p>
+              ) : (
+                <form onSubmit={saveReceive} noValidate className="space-y-3">
+                  <p className="text-xs text-slate-500">
+                    مانده‌ی قابل دریافت: <span className="font-bold text-slate-800">{formatToman(amountLeft)}</span>
+                  </p>
+                  <Field label="روش دریافت" htmlFor="rMethod" error={receiveErrors.method}>
+                    <Select id="rMethod" value={receive.method} onChange={(e) => setReceiveField("method", e.target.value)} className={inputCls(Boolean(receiveErrors.method))}>
+                      {RECEIVE_METHOD_OPTIONS.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label={`${PAYMENT_ACCOUNT_KIND_META[receiveKind].label} (پول به کجا رسید؟)`} htmlFor="rAccount" error={receiveErrors.accountId} required>
+                    <Select id="rAccount" value={receive.accountId} onChange={(e) => setReceiveField("accountId", e.target.value)} className={inputCls(Boolean(receiveErrors.accountId))}>
+                      <option value="">انتخاب کنید…</option>
+                      {receiveAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                    {receiveAccounts.length === 0 && (
+                      <p className="mt-1 text-xs text-amber-600">
+                        هنوز {PAYMENT_ACCOUNT_KIND_META[receiveKind].label}ی تعریف نشده؛ از{" "}
+                        <Link href="/admin/finance/accounts" className="font-bold underline">
+                          صندوق‌ها و بانک‌ها
+                        </Link>{" "}
+                        اضافه کنید.
+                      </p>
+                    )}
+                  </Field>
+                  <Field label="مبلغ دریافتی (تومان)" htmlFor="rAmount" error={receiveErrors.amount}>
+                    <input
+                      id="rAmount"
+                      inputMode="numeric"
+                      value={receive.amount}
+                      onChange={(e) => setReceiveField("amount", e.target.value)}
+                      placeholder={`خالی = کل مانده (${formatNumber(amountLeft)})`}
+                      className={inputCls(Boolean(receiveErrors.amount))}
+                    />
+                  </Field>
+                  {receive.method !== "CASH" && (
+                    <Field label="شماره پیگیری (اختیاری)" htmlFor="rRef" error={receiveErrors.reference}>
+                      <input id="rRef" dir="ltr" value={receive.reference} onChange={(e) => setReceiveField("reference", e.target.value)} className={inputCls(Boolean(receiveErrors.reference))} />
+                    </Field>
+                  )}
+                  <Field label="توضیحات (اختیاری)" htmlFor="rNote" error={receiveErrors.note}>
+                    <input id="rNote" value={receive.note} onChange={(e) => setReceiveField("note", e.target.value)} className={inputCls(Boolean(receiveErrors.note))} />
+                  </Field>
+                  <button type="submit" disabled={receiveBusy} className={cn(buttonVariants({ size: "default" }), "flex w-full")}>
+                    {receiveBusy ? <Spinner /> : "ثبت دریافت وجه"}
+                  </button>
+                </form>
+              )}
+            </Card>
+          )}
 
           <Card title="خریدار">
             <p className="text-xs">

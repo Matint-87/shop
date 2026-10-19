@@ -75,6 +75,7 @@ const NAV = [
       { href: "/admin/finance/transactions", label: "تراکنش‌ها" },
       { href: "/admin/finance/payments", label: "پرداخت‌ها" },
       { href: "/admin/finance/refunds", label: "برگشت وجه" },
+      { href: "/admin/finance/accounts", label: "صندوق‌ها و بانک‌ها" },
     ],
   },
   {

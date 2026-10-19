@@ -74,7 +74,11 @@ function OrderCard({ order, walletBalance, onChanged }) {
   const extra = thumbs.length - MAX_THUMBS;
   const pay = order.payment;
   const isDead = order.status === "CANCELED" || order.status === "RETURNED";
-  const payMeta = PAYMENT_STATUS_META[pay.status];
+  // پرداخت آنلاین نداریم: سفارشِ هنوز پرداخت‌نشده یعنی «پرداخت هنگام تحویل» (نه یک هشدار قرمز)
+  const payMeta =
+    pay.status === "UNPAID" && !isDead
+      ? { label: "پرداخت هنگام تحویل", color: "text-slate-700 bg-slate-100" }
+      : PAYMENT_STATUS_META[pay.status];
   const canCancel = USER_CANCELABLE_STATUSES.includes(order.status);
 
   async function handleCancel(reason) {
@@ -164,7 +168,8 @@ function OrderCard({ order, walletBalance, onChanged }) {
         </div>
       )}
 
-      {pay.canPay && (
+      {/* پرداخت از کیف پول فقط وقتی اعتبار داره؛ بقیه‌ی مبلغ هنگام تحویل دریافت می‌شه */}
+      {pay.canPay && walletBalance > 0 && (
         <div className="mb-3">
           {paying ? (
             <PayPanel
@@ -181,7 +186,7 @@ function OrderCard({ order, walletBalance, onChanged }) {
               onClick={() => setPaying(true)}
               className={cn(buttonVariants({ size: "default" }), "w-full")}
             >
-              پرداخت سفارش ({formatToman(pay.remaining)})
+              پرداخت از کیف پول (اعتبار: {formatToman(walletBalance)})
             </button>
           )}
           {pay.awaitingConfirmation && (
