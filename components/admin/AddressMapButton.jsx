@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
-import { FaCheck, FaCopy, FaDirections, FaExternalLinkAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaDirections, FaMapMarkerAlt } from "react-icons/fa";
 import FormModal from "@/components/admin/FormModal";
 import { toFaDigits } from "@/lib/phone";
 
@@ -34,26 +34,49 @@ const linkCls =
 
 /**
  * دکمه‌ی «مشاهده روی نقشه»؛ اگه آدرس مختصات نداشته باشه (آدرس‌های قدیمی که دستی ثبت شدن) چیزی نشون نمی‌ده.
- * مودال: نقشه با پین + متن آدرس + مسیریابی (گوگل مپ) / OSM / کپی مختصات.
+ * مودال: نقشه با پین + متن آدرس + مسیریابی با گوگل مپ / نشان / بلد.
+ * مقصد = مختصات آدرس تحویل، مبدأ = موقعیت فعلی کسی که مودال رو باز کرده (GPS مرورگر).
  */
 export default function AddressMapButton({ address, title = "موقعیت آدرس روی نقشه" }) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState(null); // موقعیت فعلی کاربر: { lat, lng } یا null
   const { latitude: lat, longitude: lng } = address;
-  if (lat == null || lng == null) {
+  const hasPoint = lat != null && lng != null;
+
+  // با باز شدن مودال موقعیت فعلی گرفته می‌شه تا لینک‌های نشان/بلد مبدأ داشته باشن.
+  // لینک‌ها <a> ساده‌ان (نه window.open بعد از کار async) تا مرورگر پاپ‌آپ‌شون رو نبنده.
+  useEffect(() => {
+    if (!open || !hasPoint || typeof navigator === "undefined" || !navigator.geolocation) return;
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!cancelled) setOrigin({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        // دسترسی رد شد یا GPS در دسترس نیست؛ لینک‌ها بدون مبدأ می‌مونن
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [open, hasPoint]);
+
+  if (!hasPoint) {
     return <span className="text-[11px] text-slate-400">بدون موقعیت نقشه</span>;
   }
-  const coordText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-  async function copyCoords() {
-    try {
-      await navigator.clipboard.writeText(coordText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // کلیپ‌بورد در دسترس نیست (http یا مرورگر قدیمی)؛ کاری نمی‌کنیم
-    }
-  }
+  const dest = `${lat},${lng}`;
+  const from = origin ? `${origin.lat},${origin.lng}` : null;
+  // گوگل: بدون origin خودش از موقعیت فعلی شروع می‌کنه
+  const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+  // نشان و بلد: لینک مسیر با مبدأ و مقصد (lat,lng)؛ اگه موقعیت کاربر نیومده بود، فقط نقطه‌ی مقصد باز می‌شه
+  const neshanUrl = from
+    ? `https://nshn.ir/?origin=${from}&destination=${dest}&vehicle=d`
+    : `https://nshn.ir/?lat=${lat}&lng=${lng}`;
+  const baladUrl = from
+    ? `https://balad.ir/route?origin=${from}&destination=${dest}`
+    : `https://balad.ir/location?latitude=${lat}&longitude=${lng}#17.00/${lat}/${lng}`;
 
   return (
     <>
@@ -69,45 +92,16 @@ export default function AddressMapButton({ address, title = "موقعیت آدر
         {open && <MapViewer lat={lat} lng={lng} className="h-80 sm:h-96" />}
         <div className="space-y-3">
           <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs leading-6 text-slate-700">{addressText(address)}</p>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className={linkCls}
-            >
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <a href={googleUrl} target="_blank" rel="noreferrer" className={linkCls}>
               <FaDirections size={12} /> مسیریابی با گوگل مپ
             </a>
-            {/* نشان و بلد: لینک وب عمومی با مختصات؛ نیازی به کلید API یا تنظیمات ندارن.
-                روی موبایل اگه اپ نصب باشه معمولاً خودش لینک رو باز می‌کنه، وگرنه نسخه‌ی وب باز می‌شه. */}
-            <a
-              href={`https://neshan.org/maps/@${lat},${lng},17z`}
-              target="_blank"
-              rel="noreferrer"
-              className={linkCls}
-            >
+            <a href={neshanUrl} target="_blank" rel="noreferrer" className={linkCls}>
               <FaDirections size={12} /> مسیریابی با نشان
             </a>
-            <a
-              href={`https://balad.ir/location?latitude=${lat}&longitude=${lng}#17.00/${lat}/${lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className={linkCls}
-            >
+            <a href={baladUrl} target="_blank" rel="noreferrer" className={linkCls}>
               <FaDirections size={12} /> مسیریابی با بلد
             </a>
-            <a
-              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className={linkCls}
-            >
-              OpenStreetMap <FaExternalLinkAlt size={9} />
-            </a>
-            <button type="button" onClick={copyCoords} className={`${linkCls} col-span-2 sm:col-span-1`} aria-live="polite">
-              {copied ? <FaCheck size={11} className="text-green-700" /> : <FaCopy size={11} />}
-              <span dir="ltr">{copied ? "کپی شد" : coordText}</span>
-            </button>
           </div>
         </div>
       </FormModal>
