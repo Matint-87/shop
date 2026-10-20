@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { FaDirections, FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import FormModal from "@/components/admin/FormModal";
 import { toFaDigits } from "@/lib/phone";
 
@@ -70,13 +70,13 @@ export default function AddressMapButton({ address, title = "موقعیت آدر
   const from = origin ? `${origin.lat},${origin.lng}` : null;
   // گوگل: بدون origin خودش از موقعیت فعلی شروع می‌کنه
   const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
-  // نشان و بلد: لینک مسیر با مبدأ و مقصد (lat,lng)؛ اگه موقعیت کاربر نیومده بود، فقط نقطه‌ی مقصد باز می‌شه
+  // نشان: لینک مسیر با مبدأ و مقصد (lat,lng)؛ اگه موقعیت کاربر نیومده بود، فقط نقطه‌ی مقصد باز می‌شه.
   const neshanUrl = from
     ? `https://nshn.ir/?origin=${from}&destination=${dest}&vehicle=d`
     : `https://nshn.ir/?lat=${lat}&lng=${lng}`;
-  const baladUrl = from
-    ? `https://balad.ir/route?origin=${from}&destination=${dest}`
-    : `https://balad.ir/location?latitude=${lat}&longitude=${lng}#17.00/${lat}/${lng}`;
+  // بلد: لینک رسمی مسیر با مبدأ/مقصد پیدا نشد (/route خطای 404 می‌داد)؛ نقطه‌ی مقصد باز می‌شه
+  // و داخل خود بلد دکمه‌ی «مسیریابی» مبدأ رو موقعیت فعلی می‌ذاره.
+  const baladUrl = `https://balad.ir/location?latitude=${lat}&longitude=${lng}#17.00/${lat}/${lng}`;
 
   return (
     <>
@@ -94,13 +94,13 @@ export default function AddressMapButton({ address, title = "موقعیت آدر
           <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-xs leading-6 text-slate-700">{addressText(address)}</p>
           <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <a href={googleUrl} target="_blank" rel="noreferrer" className={linkCls}>
-              <FaDirections size={12} /> مسیریابی با گوگل مپ
+              مسیریابی با گوگل مپ
             </a>
             <a href={neshanUrl} target="_blank" rel="noreferrer" className={linkCls}>
-              <FaDirections size={12} /> مسیریابی با نشان
+              مسیریابی با نشان
             </a>
             <a href={baladUrl} target="_blank" rel="noreferrer" className={linkCls}>
-              <FaDirections size={12} /> مسیریابی با بلد
+              مسیریابی با بلد
             </a>
           </div>
         </div>
